@@ -105,22 +105,41 @@ app.post('/api/tasks', async(req,res)=>{
 //GET USERS
 app.get('/api/users',async(req,res)=>{
     try{
-        await Users.find((eval("(" + req.query.where + ")")))
-        .select(eval("("+req.query.select+")"))
-        .sort(eval( "("+req.query.sort+" )"))
-        .skip(eval( "("+req.query.skip+" )"))
-        .limit(eval( "("+req.query.limit+" )"))
-        .exec((error, data) => {
-        if (error) {
-            res.status(404).json({message:"Invalid URL"});
-        } else {
-            
-            res.status(200).json({message:"success",count:data.length,data});
+        if (req.query.count == "true") {
+            await Users.find(eval("(" + req.query.where + ")"))
+            .select(eval("("+req.query.select+")"))
+            .skip(eval( "("+req.query.skip+" )"))
+            .limit(eval( "("+req.query.limit+" )"))
+            .count()
+            .exec((error, data) => {
+                if(data){
+                    res.status(200).json({message:"success",data});
+                }
+                else{
+                    console.log(error)
+                    res.status(404).json({message:"No Data Found"});
+                
+            }
+            });
         }
-        });
+        else{
+                await Users.find((eval("(" + req.query.where + ")")))
+                .select(eval("("+req.query.select+")"))
+                .sort(eval( "("+req.query.sort+" )"))
+                .skip(eval( "("+req.query.skip+" )"))
+                .limit(eval( "("+req.query.limit+" )"))
+                .exec((error, data) => {
+                    if(data.length>0){
+                        res.status(200).json({message:"success",count:data.length,data});
+                    }
+                    else{
+                        res.status(404).json({message:"No Data Found"});
+                    }
+                });
+        }
     }
     catch{
-        res.status(404).json({message:"Invalid URL"});
+        res.status(500).json({message:"Server Error"});
     }
 
 /*------------------------------------------------**Another Method**--------------------------------------------------*/
@@ -168,22 +187,41 @@ app.get('/api/users',async(req,res)=>{
 app.get('/api/tasks',async(req,res)=>{
 
     try{
-        await Tasks.find((eval("(" + req.query.where + ")")))
-        .select(eval("("+req.query.select+")"))
-        .sort(eval( "("+req.query.sort+" )"))
-        .skip(eval( "("+req.query.skip+" )"))
-        .limit(eval( "("+req.query.limit+" )"))
-        .exec((error, data) => {
-        if (error) {
-            res.status(404).json({message:"Invalid URL"});
-        } else {
-            
-            res.status(200).json({message:"success",count:data.length,data});
+        if (req.query.count == "true") {
+            await Tasks.find(eval("(" + req.query.where + ")"))
+            .select(eval("("+req.query.select+")"))
+            .skip(eval( "("+req.query.skip+" )"))
+            .limit(eval( "("+req.query.limit+" )"))
+            .count()
+            .exec((error, data) => {
+                if(data){
+                    res.status(200).json({message:"success",data});
+                }
+                else{
+                    console.log(error)
+                    res.status(404).json({message:"No Data Found"});
+                
+            }
+            });
         }
-        });
+        else{
+                await Tasks.find((eval("(" + req.query.where + ")")))
+                .select(eval("("+req.query.select+")"))
+                .sort(eval( "("+req.query.sort+" )"))
+                .skip(eval( "("+req.query.skip+" )"))
+                .limit(eval( "("+req.query.limit+" )"))
+                .exec((error, data) => {
+                    if(data.length>0){
+                        res.status(200).json({message:"success",count:data.length,data});
+                    }
+                    else{
+                        res.status(404).json({message:"No Data Found"});
+                    }
+                });
+        }
     }
     catch{
-        res.status(404).json({message:"Invalid URL"});
+        res.status(500).json({message:"Server Error"});
     }
 
 
