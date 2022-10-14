@@ -70,7 +70,7 @@ app.post('/api/users', async(req,res)=>{
             }
         }
         else{
-            res.status(500).json({message:"User already exists"})
+            res.status(500).json({message:"Email already exists"})
         }
 
     }
@@ -112,14 +112,18 @@ app.get('/api/users',async(req,res)=>{
             .limit(eval( "("+req.query.limit+" )"))
             .count()
             .exec((error, data) => {
-                if(data){
-                    res.status(200).json({message:"success",data});
+                if (error) {
+                    res.status(404).json({message:"Invalid URL"});
+                } 
+                else {
+                    if(data){
+                        res.status(200).json({message:"success",data});
+                    }
+                    else{
+                        console.log(error)
+                        res.status(404).json({message:"No Data Found"});   
+                    }
                 }
-                else{
-                    console.log(error)
-                    res.status(404).json({message:"No Data Found"});
-                
-            }
             });
         }
         else{
@@ -129,11 +133,16 @@ app.get('/api/users',async(req,res)=>{
                 .skip(eval( "("+req.query.skip+" )"))
                 .limit(eval( "("+req.query.limit+" )"))
                 .exec((error, data) => {
-                    if(data.length>0){
-                        res.status(200).json({message:"success",count:data.length,data});
-                    }
-                    else{
-                        res.status(404).json({message:"No Data Found"});
+                    if (error) {
+                        res.status(404).json({message:"Invalid URL"});
+                    } 
+                    else {
+                        if(data.length>0){
+                            res.status(200).json({message:"success",count:data.length,data});
+                        }
+                        else{
+                            res.status(404).json({message:"No Data Found"});
+                        }
                     }
                 });
         }
@@ -141,7 +150,6 @@ app.get('/api/users',async(req,res)=>{
     catch{
         res.status(500).json({message:"Server Error"});
     }
-
 /*------------------------------------------------**Another Method**--------------------------------------------------*/
 
         // const {where}=req.query; 
@@ -194,14 +202,18 @@ app.get('/api/tasks',async(req,res)=>{
             .limit(eval( "("+req.query.limit+" )"))
             .count()
             .exec((error, data) => {
-                if(data){
-                    res.status(200).json({message:"success",data});
+                if (error) {
+                    res.status(404).json({message:"Invalid URL"});
+                } 
+                else {
+                    if(data){
+                        res.status(200).json({message:"success",data});
+                    }
+                    else{
+                        console.log(error)
+                        res.status(404).json({message:"No Data Found"});   
+                    }
                 }
-                else{
-                    console.log(error)
-                    res.status(404).json({message:"No Data Found"});
-                
-            }
             });
         }
         else{
@@ -211,11 +223,16 @@ app.get('/api/tasks',async(req,res)=>{
                 .skip(eval( "("+req.query.skip+" )"))
                 .limit(eval( "("+req.query.limit+" )"))
                 .exec((error, data) => {
-                    if(data.length>0){
-                        res.status(200).json({message:"success",count:data.length,data});
-                    }
-                    else{
-                        res.status(404).json({message:"No Data Found"});
+                    if (error) {
+                        res.status(404).json({message:"Invalid URL"});
+                    } 
+                    else {
+                        if(data.length>0){
+                            res.status(200).json({message:"success",count:data.length,data});
+                        }
+                        else{
+                            res.status(404).json({message:"No Data Found"});
+                        }
                     }
                 });
         }
