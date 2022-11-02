@@ -91,17 +91,17 @@ app.post('/api/tasks', async (req, res) => {
     if (!req.body.name == "" && !req.body.deadline == "") {
         try {
             if (!req.body.assignedUser == "") {
-                const u_id=req.body.assignedUser
-                const findUser=await Users.findById(u_id)
-                const uName=findUser.name
-                const taskData = new Tasks({'name':req.body.name,'description':req.body.description,'deadline':req.body.deadline,'completed':false,'assignedUserName':uName})
+                const u_id = req.body.assignedUser
+                const findUser = await Users.findById(u_id)
+                const uName = findUser.name
+                const taskData = new Tasks({ 'name': req.body.name, 'description': req.body.description, 'deadline': req.body.deadline, 'completed': false, 'assignedUserName': uName,'assignedUser':req.body.assignedUser })
                 const data = await taskData.save()
-                if(data){
+                if (data) {
                     const result = await Users.findByIdAndUpdate(u_id, { $push: { pendingTasks: data._id } }, { new: true })
-                    if(result){
+                    if (result) {
                         res.status(201).json({ message: "Successfully created the Task", data })
                     }
-                    else{
+                    else {
                         res.status(500).json({ message: "Server Error" });
                     }
                 }
@@ -345,8 +345,8 @@ app.put('/api/users/:id', async (req, res) => {
         if (!req.body.email == "" && !req.body.name == "") {
             const result = await Users.findByIdAndUpdate(id, updatedData, options)
             if (result) {
-                const updatedTask=await Tasks.findOneAndUpdate({assignedUser:id},{assignedUserName:req.body.name})
-                if(updatedData){
+                const updatedTask = await Tasks.findOneAndUpdate({ assignedUser: id }, { assignedUserName: req.body.name })
+                if (updatedData) {
                     res.status(201).json({ message: "Successfully updated ", result })
                 }
             }
@@ -421,14 +421,64 @@ app.put('/api/users/:id', async (req, res) => {
 app.put('/api/tasks/:id', async (req, res) => {
     if (!req.body.name == "" && !req.body.deadline == "") {
         try {
-            const id = req.params.id;
-            const updatedData = req.body;
-            const options = { new: true };
-            const data = await Tasks.findByIdAndUpdate(id, updatedData, options)
-            res.status(200).json({ message: "Successfully Updated", data })
+            if (!req.body.assignedUser == "") {
+                const id = req.params.id;
+                const new_u_id = req.body.assignedUser
+                const options = { new: true };
+                const findTask = await Tasks.findById(id)
+                const old_u_id = findTask.assignedUser
+                const updateTask = await Tasks.findByIdAndUpdate(id, { assignedUser: "", assignedUserName: "unassigned",deadline:req.body.deadline })
+                if (updateTask) {
+                    const removePendingTasks = await Users.findByIdAndUpdate(old_u_id, { $pull: { pendingTasks: id } }, { new: true })
+                    if (removePendingTasks) {
+                        const findNewUser = await Users.findById(new_u_id)
+                        const newUserName = findNewUser.name
+                        const addNewUser = await Tasks.findByIdAndUpdate(id, { assignedUser: new_u_id, assignedUserName: newUserName }, options)
+                        if (addNewUser) {
+                            const updateNewUser = await Users.findByIdAndUpdate(new_u_id, { $push: { pendingTasks: id } }, options)
+                            if(updateNewUser){
+                                res.status(200).json({ message: "Successfully Updated the task",data: addNewUser })
+                            }
+                            else{
+                                res.status(500).json({ message: "Server Error" })
+                            }
+
+                        }
+                    }
+
+                }
+
+            }
+            else {
+                const id = req.params.id;
+                const updatedData = req.body;
+                const options = { new: true };
+                const data = await Tasks.findByIdAndUpdate(id, updatedData, options)
+                res.status(200).json({ message: "Successfully Updated the task", data })
+            }
+
         }
         catch {
             res.status(500).json({ message: "Invalid Deadline Input" })
+        }
+    }
+    else if (req.body.completed === true) {
+        try {
+            const id = req.params.id;
+            const updatedData = { completed: true, assignedUserName: "unassigned", assignedUser: "" }
+            const options = { new: true };
+            const taskdata = await Tasks.findById(id)
+            const u_id = taskdata.assignedUser
+            const data = await Tasks.findByIdAndUpdate(id, updatedData, options)
+            if (data) {
+                const removePendingTasks = await Users.findByIdAndUpdate(u_id, { $pull: { pendingTasks: id } }, { new: true })
+                if (removePendingTasks) {
+                    res.status(200).json({ message: "Task completed status changed to true !" })
+                }
+            }
+        }
+        catch {
+            res.status(500).json({ message: "Server Error" })
         }
     }
     else {
@@ -477,8 +527,11 @@ app.delete('/api/tasks/:id', async (req, res) => {
             else {
                 const u_id = data.assignedUser
                 console.log(u_id)
-                const removePendingTasks = await Users.findByIdAndUpdate(u_id, { $pull: { pendingTasks: id} }, { new: true })
+                const removePendingTasks = await Users.findByIdAndUpdate(u_id, { $pull: { pendingTasks: id } }, { new: true })
                 if (removePendingTasks) {
+                    res.status(200).json({ message: `Task: ${data.name} deleted successfuly` })
+                }
+                else{
                     res.status(200).json({ message: `Task: ${data.name} deleted successfuly` })
                 }
             }
@@ -498,14 +551,15 @@ app.delete('/api/tasks/ptasks/:id', async (req, res) => {
     const u_data = await Users.findById(u_id)
     const pdata = u_data.pendingTasks
     console.log(pdata)
-    const newPdata = pdata.filter((item) => {
-        if (item != t_id) {
-            return pdata
-        }
-    })
-    const updateUser = await Users.findByIdAndUpdate(u_id, { pendingTasks: newPdata }, {
-        new: true
-    })
+    // const newPdata = pdata.filter((item) => {
+    //     if (item != t_id) {
+    //         return pdata
+    //     }
+    // })
+    const updateUser = await Users.findByIdAndUpdate(u_id, { $pull: { pendingTasks: id } }, { new: true })
+    // const updateUser = await Users.findByIdAndUpdate(u_id, { pendingTasks: newPdata }, {
+    //     new: true
+    // })
     if (updateUser) {
         const updatedTask = await Tasks.findByIdAndUpdate(t_id, { completed: "true", assignedUser: "", assignedUserName: "unassigned" }, {
             new: true
