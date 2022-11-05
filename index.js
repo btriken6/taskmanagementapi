@@ -427,7 +427,7 @@ app.put('/api/tasks/:id', async (req, res) => {
                 const options = { new: true };
                 const findTask = await Tasks.findById(id)
                 const old_u_id = findTask.assignedUser
-                const updateTask = await Tasks.findByIdAndUpdate(id, {name:req.body.name,description:req.body.description, assignedUser: "", assignedUserName: "unassigned", deadline: req.body.deadline,completed:false })
+                const updateTask = await Tasks.findByIdAndUpdate(id, { name: req.body.name, description: req.body.description, assignedUser: "", assignedUserName: "unassigned", deadline: req.body.deadline, completed: false })
                 if (updateTask) {
                     // console.log(updateTask,"up task1")
 
@@ -444,11 +444,11 @@ app.put('/api/tasks/:id', async (req, res) => {
 
                             if (updateNewUser) {
                                 console.log(updateNewUser, "up new1")
-                                
-                                if(findTask.assignedUser==""){
+
+                                if (findTask.assignedUser == "") {
                                     res.status(200).json({ message: "Successfully assigned the user", data: addNewUser })
                                 }
-                                else{
+                                else {
                                     const removePendingTasks = await Users.findByIdAndUpdate(old_u_id, { $pull: { pendingTasks: id } }, { new: true })
                                     if (removePendingTasks) {
                                         console.log(removePendingTasks, "remove pen1")
@@ -480,11 +480,21 @@ app.put('/api/tasks/:id', async (req, res) => {
             const options = { new: true };
             const taskdata = await Tasks.findById(id)
             const u_id = taskdata.assignedUser
-            const data = await Tasks.findByIdAndUpdate(id, updatedData, options)
-            if (data) {
-                const removePendingTasks = await Users.findByIdAndUpdate(u_id, { $pull: { pendingTasks: id } }, { new: true })
-                if (removePendingTasks) {
+            console.log(u_id)
+            if (u_id === "") {
+                const data = await Tasks.findByIdAndUpdate(id, updatedData, options)
+                if (data) {
+                    console.log(data)
                     res.status(200).json({ message: "Task completed status changed to true !" })
+                }
+            }
+            else {
+                const data = await Tasks.findByIdAndUpdate(id, updatedData, options)
+                if (data) {
+                    const removePendingTasks = await Users.findByIdAndUpdate(u_id, { $pull: { pendingTasks: id } }, { new: true })
+                    if (removePendingTasks) {
+                        res.status(200).json({ message: "Task completed status changed to true !" })
+                    }
                 }
             }
         }
@@ -554,34 +564,6 @@ app.delete('/api/tasks/:id', async (req, res) => {
         res.status(500).json({ message: "Server Error" })
     }
 })
-
-app.delete('/api/tasks/ptasks/:id', async (req, res) => {
-    const t_id = req.params.id;
-    const data = await Tasks.findById(t_id)
-    const u_id = data.assignedUser;
-    const u_data = await Users.findById(u_id)
-    const pdata = u_data.pendingTasks
-    console.log(pdata)
-    // const newPdata = pdata.filter((item) => {
-    //     if (item != t_id) {
-    //         return pdata
-    //     }
-    // })
-    const updateUser = await Users.findByIdAndUpdate(u_id, { $pull: { pendingTasks: id } }, { new: true })
-    // const updateUser = await Users.findByIdAndUpdate(u_id, { pendingTasks: newPdata }, {
-    //     new: true
-    // })
-    if (updateUser) {
-        const updatedTask = await Tasks.findByIdAndUpdate(t_id, { completed: "true", assignedUser: "", assignedUserName: "unassigned" }, {
-            new: true
-        })
-        if (updatedTask) {
-            res.status(200).json({ message: "Task Status: Completed" })
-        }
-
-    }
-})
-
 
 app.listen(port, () => {
     console.log("started");
