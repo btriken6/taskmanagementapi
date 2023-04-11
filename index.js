@@ -13,7 +13,7 @@ const port = process.env.PORT || 3005
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
-mongoose.connect("mongodb+srv://btriken8:Triken12@cluster0.eei0ody.mongodb.net/?retryWrites=true&w=majority")
+mongoose.connect("mongodb+srv://btriken6:Mongo-12@cluster0.3kaqxb3.mongodb.net/?retryWrites=true&w=majority")
     .then(() => {
         console.log('connected')
     }).catch((error) => {
